@@ -46,12 +46,12 @@ python splitor.py large_document.pdf --max-pages 100 --max-size 5000000
 ## 依赖
 
 - Python 3.6+
-- PyPDF2
+- pymupdf
 
 ## 安装
 
 1. 克隆此仓库
-2. 安装依赖：`pip install PyPDF2`
+2. 安装依赖：`pip install pymupdf`
 
 ## 注意事项
 
