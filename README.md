@@ -27,7 +27,7 @@
 ## 使用方法
 
 ```bash
-python splitor.py <input_file> [options]
+python splitter.py <input_file> [options]
 ```
 
 ### 选项
@@ -40,7 +40,7 @@ python splitor.py <input_file> [options]
 ### 示例
 
 ```bash
-python splitor.py large_document.pdf --max-pages 100 --max-size 5000000
+python splitter.py large_document.pdf --max-pages 100 --max-size 5000000
 ```
 
 ## 依赖
