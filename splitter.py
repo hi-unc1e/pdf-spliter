@@ -1,21 +1,20 @@
 #!/usr/bin/env /Users/dpdu/.pyenv/versions/3.8.18/bin/python3
 import os
-import PyPDF2
-from io import BytesIO
+import pymupdf  # PyMuPDF
 import multiprocessing
 
 def process_part(args):
     input_file, output_dir, output_prefix, start_page, end_page, part_num = args
-    reader = PyPDF2.PdfReader(input_file)
-    writer = PyPDF2.PdfWriter()
+    doc = pymupdf.open(input_file)
+    writer = pymupdf.open()
 
-    for page_num in range(start_page, min(end_page, len(reader.pages))):
-        writer.add_page(reader.pages[page_num])
-        print(f"Processing page {page_num + 1} of {len(reader.pages)}")
+    for page_num in range(start_page, min(end_page, len(doc))):
+        writer.insert_pdf(doc, from_page=page_num, to_page=page_num)
+        print(f"Processing page {page_num + 1} of {len(doc)}")
 
     output_file = os.path.join(output_dir, f"{output_prefix}_part{part_num}.pdf")
-    with open(output_file, 'wb') as outfile:
-        writer.write(outfile)
+    writer.save(output_file)
+    writer.close()
 
     print(f"Created part {part_num}: {output_file}")
 
@@ -24,9 +23,8 @@ def split_pdf(input_file, output_dir, output_prefix, max_pages=250, max_size=9*1
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    with open(input_file, 'rb') as infile:
-        reader = PyPDF2.PdfReader(infile)
-        total_pages = len(reader.pages)
+    doc = pymupdf.open(input_file)
+    total_pages = len(doc)
 
     num_parts = (total_pages + max_pages - 1) // max_pages
     pool = multiprocessing.Pool()
