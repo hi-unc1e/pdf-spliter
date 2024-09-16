@@ -1,7 +1,22 @@
 import os
 import PyPDF2
 from io import BytesIO
+import multiprocessing
 
+def process_part(args):
+    input_file, output_dir, output_prefix, start_page, end_page, part_num = args
+    reader = PyPDF2.PdfReader(input_file)
+    writer = PyPDF2.PdfWriter()
+
+    for page_num in range(start_page, min(end_page, len(reader.pages))):
+        writer.add_page(reader.pages[page_num])
+        print(f"Processing page {page_num + 1} of {len(reader.pages)}")
+
+    output_file = os.path.join(output_dir, f"{output_prefix}_part{part_num}.pdf")
+    with open(output_file, 'wb') as outfile:
+        writer.write(outfile)
+
+    print(f"Created part {part_num}: {output_file}")
 
 def split_pdf(input_file, output_dir, output_prefix, max_pages=250, max_size=9*1024*1024):
     output_dir = os.path.join(os.path.dirname(input_file), output_dir)
@@ -10,33 +25,21 @@ def split_pdf(input_file, output_dir, output_prefix, max_pages=250, max_size=9*1
 
     with open(input_file, 'rb') as infile:
         reader = PyPDF2.PdfReader(infile)
-        total_pages = len(reader.pages) 
-        part_num = 1
-        current_page = 0
+        total_pages = len(reader.pages)
 
-        while current_page < total_pages:
-            writer = PyPDF2.PdfWriter()
-            part_size = 0
+    num_parts = (total_pages + max_pages - 1) // max_pages
+    pool = multiprocessing.Pool()
 
-            while current_page < total_pages and len(writer.pages) < max_pages and part_size < max_size:
-                cp = reader.pages[current_page]
-                writer.add_page(cp)
-                print(f"Processing page {current_page + 1} of {total_pages}")  # 新增的打印语句
-                current_page += 1
-                
-                # Calculate the size of the current part
-                temp_buffer = BytesIO()
-                writer.write(temp_buffer)
-                part_size = temp_buffer.tell()
+    args_list = [
+        (input_file, output_dir, output_prefix, i * max_pages, (i + 1) * max_pages, i + 1)
+        for i in range(num_parts)
+    ]
 
-            output_file = os.path.join(output_dir, f"{output_prefix}_part{part_num}.pdf")
-            with open(output_file, 'wb') as outfile:
-                writer.write(outfile)
+    pool.map(process_part, args_list)
+    pool.close()
+    pool.join()
 
-            print(f"Created part {part_num}: {output_file}")  # 新增的打印语句
-            part_num += 1
-
-    print("PDF splitting completed.")  # 新增的打印语句
+    print("PDF splitting completed.")
 
 if __name__ == "__main__":
     import argparse
