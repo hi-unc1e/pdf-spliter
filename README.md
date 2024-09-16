@@ -64,4 +64,4 @@ python splitor.py large_document.pdf --max-pages 100 --max-size 5000000
 
 ## 许可
 
-[MIT License](LICENSE)
+[Apache License 2.0](LICENSE)
